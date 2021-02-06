@@ -1,6 +1,6 @@
 [package]
-name = "railog"
-version = "0.1.0"
+name = "traili"
+version = "0.0.1"
 authors = ["djKooks <inylove82@gmail.com>"]
 edition = "2018"
 
@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
+rdkafka = { version = "0.24" }
