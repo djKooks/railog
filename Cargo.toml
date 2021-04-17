@@ -8,4 +8,6 @@ edition = "2018"
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
-rdkafka = { version = "0.24" }
+clap = "2.33.3"
+
+rdkafka = { version = "0.25", features = ["cmake-build"] }
