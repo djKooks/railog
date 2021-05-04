@@ -32,12 +32,12 @@ pub async fn consume_message(brokers: &str, group_id: &str, topics: &[&str]) {
     let context = CustomContext;
 
     let consumer: LoggingConsumer = ClientConfig::new()
-        .set("group.id", "group")
-        .set("bootstrap.servers", "localhost:9092")
+        .set("group.id", group_id)
+        .set("bootstrap.servers", brokers)
         .set("enable.partition.eof", "false")
         .set("session.timeout.ms", "6000")
         .set("enable.auto.commit", "true")
-        //.set("statistics.interval.ms", "30000")
+        .set("allow.auto.create.topics", "true")
         .set("auto.offset.reset", "smallest")
         .set_log_level(RDKafkaLogLevel::Debug)
         .create_with_context(context)
@@ -51,6 +51,7 @@ pub async fn consume_message(brokers: &str, group_id: &str, topics: &[&str]) {
         match consumer.recv().await {
             Err(e) => println!("Kafka error: {}", e),
             Ok(m) => {
+                println!("run loop");
                 let payload = match m.payload_view::<str>() {
                     None => "",
                     Some(Ok(s)) => s,
