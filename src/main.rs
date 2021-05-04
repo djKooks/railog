@@ -1,17 +1,14 @@
-use tokio::io::AsyncWriteExt;
-use tokio::net::TcpStream;
+mod kafka_consumer;
+use kafka_consumer::consume_message;
+use rdkafka::util::get_rdkafka_version;
 
-use std::error::Error;
+use clap::{App, Arg};
 
 #[tokio::main]
-pub async fn main() -> Result<(), Box<dyn Error>> {
-    println!("Hello, world!");
+async fn main() {
+    let topics = ["test-topic"];
+    let brokers = "localhost:9092";
+    let group_id = "group";
 
-    let mut stream = TcpStream::connect("127.0.0.1:6142").await?;
-    println!("created stream");
-
-    let result = stream.write(b"hello world\n").await;
-    println!("wrote to stream; success={:?}", result.is_ok());
-
-    Ok(())
+    consume_message(brokers, group_id, &topics).await
 }
