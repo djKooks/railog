@@ -18,13 +18,11 @@ enum InputType {
 }
 
 pub fn parse_config() -> Result<TrailiConfig, ()>  {
-    let config = std::fs::File::open("config.yml").expect("Cannot find file");
-    let parsed: Vec<TrailiConfig> = serde_yaml::from_reader(config).expect("Cannot parse");
-    // println!("Read yml string -> {:?}", parsed);
+    let config: std::fs::File = std::fs::File::open("config.yml").expect("Cannot find config file");
+    let parsed: Vec<TrailiConfig> = serde_yaml::from_reader(config).expect("Cannot parse configuration");
 
     match &parsed[0].input_type {
-        InputType::Kafka => Ok(parsed[0].clone()),
-        _ => panic!("")
+        InputType::Kafka => Ok(parsed[0].clone())
     }
 }
 

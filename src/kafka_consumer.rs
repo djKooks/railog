@@ -3,16 +3,12 @@ use rdkafka::config::{ClientConfig, RDKafkaLogLevel};
 use rdkafka::consumer::stream_consumer::StreamConsumer;
 use rdkafka::consumer::{CommitMode, Consumer, ConsumerContext, Rebalance};
 use rdkafka::error::KafkaResult;
-use rdkafka::message::{Headers, Message};
+use rdkafka::message::{Message};
 use rdkafka::topic_partition_list::TopicPartitionList;
 use serde::{Serialize, Deserialize};
 use meilisearch_sdk::{
-    indexes::*,
     document::*,
     client::*,
-    search::*,
-    progress::*,
-    settings::*
 };
 use uuid::Uuid;
 
@@ -101,4 +97,3 @@ async fn add_payload(payload: &str, document: &str) {
     let pl: Vec<TrailiLog> = vec![log];
     doc.add_documents(&pl, None).await.unwrap();
 }
-
