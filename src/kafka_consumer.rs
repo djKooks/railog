@@ -47,9 +47,9 @@ impl ConsumerContext for CustomContext {
 
 type LoggingConsumer = StreamConsumer<CustomContext>;
 
-pub async fn consume_message(brokers: &str, group_id: &str, topics: &[&str]) {
+pub async fn consume_message(brokers: &str, group_id: &str, topics: Vec<&str>, document: &str) {
     let context = CustomContext;
-
+    let topic = &topics[..];
     let consumer: LoggingConsumer = ClientConfig::new()
         .set("group.id", group_id)
         .set("bootstrap.servers", brokers)
@@ -63,7 +63,7 @@ pub async fn consume_message(brokers: &str, group_id: &str, topics: &[&str]) {
         .expect("Consumer creation failed");
 
     consumer
-        .subscribe(&topics.to_vec())
+        .subscribe(topic)
         .expect("Can't subscribe to specified topics");
 
     loop {
@@ -81,23 +81,17 @@ pub async fn consume_message(brokers: &str, group_id: &str, topics: &[&str]) {
                 };
                 println!("key: '{:?}', payload: '{}', topic: {}, partition: {}, offset: {}, timestamp: {:?}",
                       m.key(), payload, m.topic(), m.partition(), m.offset(), m.timestamp());
-                if let Some(headers) = m.headers() {
-                    for i in 0..headers.count() {
-                        let header = headers.get(i).unwrap();
-                        println!("  Header {:#?}: {:?}", header.0, header.1);
-                    }
-                }
 
-                add_payload(payload).await;
+                add_payload(payload, document).await;
                 consumer.commit_message(&m, CommitMode::Async).unwrap();
             }
         };
     }
 }
 
-async fn add_payload(payload: &str) {
+async fn add_payload(payload: &str, document: &str) {
     let client = Client::new("http://localhost:7700", "masterKey");
-    let doc = client.get_or_create("doc").await.unwrap();
+    let doc = client.get_or_create(document).await.unwrap();
     let log = TrailiLog {
         id: Uuid::new_v4().to_string(),
         value: String::from(payload),
