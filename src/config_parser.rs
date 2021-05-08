@@ -17,8 +17,8 @@ enum InputType {
     Kafka
 }
 
-pub fn parse_config() -> Result<TrailiConfig, ()>  {
-    let config: std::fs::File = std::fs::File::open("config.yml").expect("Cannot find config file");
+pub fn parse_config(config_path: &str) -> Result<TrailiConfig, ()>  {
+    let config: std::fs::File = std::fs::File::open(config_path).expect("Cannot find config file");
     let parsed: Vec<TrailiConfig> = serde_yaml::from_reader(config).expect("Cannot parse configuration");
 
     match &parsed[0].input_type {
