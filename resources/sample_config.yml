@@ -1,0 +1,7 @@
+- input_type: kafka
+  brokers: localhost:9092
+  topics: [test-topic]
+  group_id: test-group
+  document: traili
+  log_level: debug
+

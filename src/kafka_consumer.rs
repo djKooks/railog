@@ -86,14 +86,16 @@ pub async fn consume_message(brokers: &str, group_id: &str, topics: Vec<&str>, d
 }
 
 async fn add_payload(payload: &str, document: &str) {
+    // TODO: Set host/key as configuration
     let client = Client::new("http://localhost:7700", "masterKey");
     let doc = client.get_or_create(document).await.unwrap();
+
+    // TODO: Update log form
     let log = TrailiLog {
         id: Uuid::new_v4().to_string(),
         value: String::from(payload),
     };
 
-    println!("Throw log : {:?}", log);
     let pl: Vec<TrailiLog> = vec![log];
     doc.add_documents(&pl, None).await.unwrap();
 }

@@ -26,3 +26,13 @@ pub fn parse_config(config_path: &str) -> Result<TrailiConfig, ()>  {
     }
 }
 
+#[test]
+fn parse_test() {
+    let config: TrailiConfig = parse_config("resources/sample_config.yml").unwrap();
+
+    assert_eq!(config.brokers, "localhost:9092");
+    assert_eq!(config.group_id, "test-group");
+    assert_eq!(config.topics, &["test-topic"]);
+    assert_eq!(config.document, "document");
+}
+
