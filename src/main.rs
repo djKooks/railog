@@ -1,8 +1,5 @@
 mod kafka_consumer;
 use kafka_consumer::consume_message;
-use rdkafka::util::get_rdkafka_version;
-
-use clap::{App, Arg};
 
 #[tokio::main]
 async fn main() {
