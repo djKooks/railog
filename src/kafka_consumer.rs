@@ -3,16 +3,12 @@ use rdkafka::config::{ClientConfig, RDKafkaLogLevel};
 use rdkafka::consumer::stream_consumer::StreamConsumer;
 use rdkafka::consumer::{CommitMode, Consumer, ConsumerContext, Rebalance};
 use rdkafka::error::KafkaResult;
-use rdkafka::message::{Headers, Message};
+use rdkafka::message::{Message};
 use rdkafka::topic_partition_list::TopicPartitionList;
 use serde::{Serialize, Deserialize};
 use meilisearch_sdk::{
-    indexes::*,
     document::*,
     client::*,
-    search::*,
-    progress::*,
-    settings::*
 };
 use uuid::Uuid;
 
@@ -47,9 +43,9 @@ impl ConsumerContext for CustomContext {
 
 type LoggingConsumer = StreamConsumer<CustomContext>;
 
-pub async fn consume_message(brokers: &str, group_id: &str, topics: &[&str]) {
+pub async fn consume_message(brokers: &str, group_id: &str, topics: Vec<&str>, document: &str) {
     let context = CustomContext;
-
+    let topic = &topics[..];
     let consumer: LoggingConsumer = ClientConfig::new()
         .set("group.id", group_id)
         .set("bootstrap.servers", brokers)
@@ -63,7 +59,7 @@ pub async fn consume_message(brokers: &str, group_id: &str, topics: &[&str]) {
         .expect("Consumer creation failed");
 
     consumer
-        .subscribe(&topics.to_vec())
+        .subscribe(topic)
         .expect("Can't subscribe to specified topics");
 
     loop {
@@ -81,23 +77,17 @@ pub async fn consume_message(brokers: &str, group_id: &str, topics: &[&str]) {
                 };
                 println!("key: '{:?}', payload: '{}', topic: {}, partition: {}, offset: {}, timestamp: {:?}",
                       m.key(), payload, m.topic(), m.partition(), m.offset(), m.timestamp());
-                if let Some(headers) = m.headers() {
-                    for i in 0..headers.count() {
-                        let header = headers.get(i).unwrap();
-                        println!("  Header {:#?}: {:?}", header.0, header.1);
-                    }
-                }
 
-                add_payload(payload).await;
+                add_payload(payload, document).await;
                 consumer.commit_message(&m, CommitMode::Async).unwrap();
             }
         };
     }
 }
 
-async fn add_payload(payload: &str) {
+async fn add_payload(payload: &str, document: &str) {
     let client = Client::new("http://localhost:7700", "masterKey");
-    let doc = client.get_or_create("doc").await.unwrap();
+    let doc = client.get_or_create(document).await.unwrap();
     let log = TrailiLog {
         id: Uuid::new_v4().to_string(),
         value: String::from(payload),
@@ -107,4 +97,3 @@ async fn add_payload(payload: &str) {
     let pl: Vec<TrailiLog> = vec![log];
     doc.add_documents(&pl, None).await.unwrap();
 }
-
