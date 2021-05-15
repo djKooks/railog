@@ -1,6 +1,8 @@
 name: Rust
 
 on:
+  push:
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -12,7 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Build
+    - name: Build project
       run: cargo build --verbose
+    - name: Run formatting
+      run: cargo fmt --all -- --check
     - name: Run tests
       run: cargo test --verbose
