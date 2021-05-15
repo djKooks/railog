@@ -1,15 +1,12 @@
+use meilisearch_sdk::{client::*, document::*};
 use rdkafka::client::ClientContext;
 use rdkafka::config::{ClientConfig, RDKafkaLogLevel};
 use rdkafka::consumer::stream_consumer::StreamConsumer;
 use rdkafka::consumer::{CommitMode, Consumer, ConsumerContext, Rebalance};
 use rdkafka::error::KafkaResult;
-use rdkafka::message::{Message};
+use rdkafka::message::Message;
 use rdkafka::topic_partition_list::TopicPartitionList;
-use serde::{Serialize, Deserialize};
-use meilisearch_sdk::{
-    document::*,
-    client::*,
-};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 struct CustomContext;
@@ -17,12 +14,14 @@ struct CustomContext;
 #[derive(Serialize, Deserialize, Debug)]
 struct TrailiLog {
     id: String,
-    value: String
+    value: String,
 }
 
 impl Document for TrailiLog {
     type UIDType = String;
-    fn get_uid(&self) -> &Self::UIDType { &self.id }
+    fn get_uid(&self) -> &Self::UIDType {
+        &self.id
+    }
 }
 
 impl ClientContext for CustomContext {}
@@ -46,6 +45,8 @@ type LoggingConsumer = StreamConsumer<CustomContext>;
 pub async fn consume_message(brokers: &str, group_id: &str, topics: Vec<&str>, document: &str) {
     let context = CustomContext;
     let topic = &topics[..];
+
+    // Get kafka-client configuration by configs
     let consumer: LoggingConsumer = ClientConfig::new()
         .set("group.id", group_id)
         .set("bootstrap.servers", brokers)
@@ -86,14 +87,16 @@ pub async fn consume_message(brokers: &str, group_id: &str, topics: Vec<&str>, d
 }
 
 async fn add_payload(payload: &str, document: &str) {
+    // TODO: Set host/key as configuration
     let client = Client::new("http://localhost:7700", "masterKey");
     let doc = client.get_or_create(document).await.unwrap();
+
+    // TODO: Update log form
     let log = TrailiLog {
         id: Uuid::new_v4().to_string(),
         value: String::from(payload),
     };
 
-    println!("Throw log : {:?}", log);
     let pl: Vec<TrailiLog> = vec![log];
     doc.add_documents(&pl, None).await.unwrap();
 }
