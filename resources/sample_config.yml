@@ -1,7 +1,11 @@
-- input_type: kafka
-  brokers: localhost:9092
-  topics: [test-topic]
-  group_id: test-group
-  document: traili
-  log_level: debug
+meilisearch:
+  host: http://localhost:7700
+  master_key: masterKey
 
+consumers:
+  - input_type: kafka
+    brokers: 127.0.0.1:9092,127.0.0.2:9092
+    topics: [test-topic]
+    group_id: group
+    document: traili
+    log_level: debug

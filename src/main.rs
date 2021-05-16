@@ -1,8 +1,9 @@
 mod config_parser;
 mod kafka_consumer;
+mod publish_message;
 
 use clap::{App, Arg};
-use config_parser::{parse_config, TrailiConfig};
+use config_parser::{parse_config, TrailiConfig, YmlConfig};
 use kafka_consumer::consume_message;
 
 #[tokio::main]
@@ -20,11 +21,17 @@ async fn main() {
         )
         .get_matches();
 
-    let config_file_path = matches.value_of("config").unwrap();
-    let config: TrailiConfig = parse_config(config_file_path).unwrap();
+    let config_file_path: &str = matches.value_of("config").unwrap();
+
+    parse_config(config_file_path)
+    /*
+    let config: YmlConfig = parse_config(config_file_path).unwrap();
 
     println!("Read config -> {:?}", config);
 
-    let tp = config.topics.iter().map(String::as_str).collect();
-    consume_message(&config.brokers, &config.group_id, tp, &config.document).await;
+    let topics: Vec<&str> = config.topics.iter().map(String::as_str).collect();
+
+    // TODO: consuming logic should be selected by data source type
+    consume_message(&config.brokers, &config.group_id, topics, &config.document).await;
+    */
 }

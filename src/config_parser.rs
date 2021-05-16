@@ -1,5 +1,17 @@
 use serde::{Deserialize, Serialize};
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct YmlConfig {
+    meilisearch: MeiliSearchConfig,
+    consumers: Vec<TrailiConfig>
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct MeiliSearchConfig {
+    host: String,
+    master_key: String
+}
+
 /// TODO: Make config for multiple input types...
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct TrailiConfig {
@@ -17,14 +29,17 @@ enum InputType {
     Kafka,
 }
 
-pub fn parse_config(config_path: &str) -> Result<TrailiConfig, ()> {
+pub fn parse_config(config_path: &str) {
     let config: std::fs::File = std::fs::File::open(config_path).expect("Cannot find config file");
-    let parsed: Vec<TrailiConfig> =
+    let parsed: YmlConfig =
         serde_yaml::from_reader(config).expect("Cannot parse configuration");
 
+    println!("parsed -> {:?}", parsed);
+    /*
     match &parsed[0].input_type {
         InputType::Kafka => Ok(parsed[0].clone()),
     }
+    */
 }
 
 #[test]
