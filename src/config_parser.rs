@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct YmlConfig {
     meilisearch: MeiliSearchConfig,
-    consumers: Vec<TrailiConfig>
+    consumers: TrailiConfig
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -29,17 +29,19 @@ enum InputType {
     Kafka,
 }
 
-pub fn parse_config(config_path: &str) {
+pub fn parse_config(config_path: &str) -> Option<YmlConfig, > {
     let config: std::fs::File = std::fs::File::open(config_path).expect("Cannot find config file");
     let parsed: YmlConfig =
         serde_yaml::from_reader(config).expect("Cannot parse configuration");
 
     println!("parsed -> {:?}", parsed);
-    /*
-    match &parsed[0].input_type {
-        InputType::Kafka => Ok(parsed[0].clone()),
+
+    let input_source = &parsed.consumers;
+    // Only kafka type is supported yet...
+    match input_source.input_type {
+        InputType::Kafka => Some(parsed.clone()),
+        _ => None
     }
-    */
 }
 
 #[test]

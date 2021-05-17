@@ -22,11 +22,15 @@ async fn main() {
         .get_matches();
 
     let config_file_path: &str = matches.value_of("config").unwrap();
+    let config = match parse_config(config_file_path) {
+        Some(v) => v,
+        None => panic!("Unsupported type")
+    };
+    
+    println!("{:?}", config);
+    // match config.consumers
 
-    parse_config(config_file_path)
     /*
-    let config: YmlConfig = parse_config(config_file_path).unwrap();
-
     println!("Read config -> {:?}", config);
 
     let topics: Vec<&str> = config.topics.iter().map(String::as_str).collect();
@@ -34,4 +38,5 @@ async fn main() {
     // TODO: consuming logic should be selected by data source type
     consume_message(&config.brokers, &config.group_id, topics, &config.document).await;
     */
+    
 }
