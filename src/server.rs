@@ -58,7 +58,7 @@ async fn main() {
                 println!("key: '{:?}', payload: '{}', topic: {}, partition: {}, offset: {}, timestamp: {:?}",
                       m.key(), payload, m.topic(), m.partition(), m.offset(), m.timestamp());
 
-                publish_payload(payload, document).await;
+                // publish_payload(payload, ms_config).await;
                 consumer.commit_message(&m, CommitMode::Async).unwrap();
             }
         };
