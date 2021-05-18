@@ -6,9 +6,9 @@ use rdkafka::error::KafkaResult;
 use rdkafka::message::Message;
 use rdkafka::topic_partition_list::TopicPartitionList;
 
-use crate::publish_message::publish_payload;
+use crate::config_parser::KafkaConsumerConfig;
 
-struct CustomContext;
+pub struct CustomContext;
 
 impl ClientContext for CustomContext {}
 
@@ -28,7 +28,32 @@ impl ConsumerContext for CustomContext {
 
 type LoggingConsumer = StreamConsumer<CustomContext>;
 
-pub async fn consume_message(brokers: &str, group_id: &str, topics: Vec<&str>, document: &str) {
+pub async fn get_consumer(consumer_config: KafkaConsumerConfig) -> StreamConsumer<CustomContext>  {
+    let topics: Vec<&str> = consumer_config.topics.iter().map(String::as_str).collect();
+    let context = CustomContext;
+    let topic = &topics[..];
+
+    // Get kafka-client configuration by configs
+    let consumer: LoggingConsumer = ClientConfig::new()
+        .set("group.id", consumer_config.group_id)
+        .set("bootstrap.servers", consumer_config.brokers)
+        .set("enable.partition.eof", "false")
+        .set("session.timeout.ms", "6000")
+        .set("enable.auto.commit", "true")
+        .set("allow.auto.create.topics", "true")
+        .set("auto.offset.reset", "smallest")
+        .set_log_level(RDKafkaLogLevel::Debug)
+        .create_with_context(context)
+        .expect("Consumer creation failed");
+
+    consumer
+        .subscribe(topic)
+        .expect("Can't subscribe to specified topics");
+    
+    consumer
+}
+
+pub async fn consume_message(brokers: &str, group_id: &str, topics: Vec<&str>, document: &str) -> StreamConsumer<CustomContext> {
     let context = CustomContext;
     let topic = &topics[..];
 
@@ -48,7 +73,7 @@ pub async fn consume_message(brokers: &str, group_id: &str, topics: Vec<&str>, d
     consumer
         .subscribe(topic)
         .expect("Can't subscribe to specified topics");
-
+    
     loop {
         match consumer.recv().await {
             Err(e) => println!("Kafka error: {}", e),
@@ -70,4 +95,5 @@ pub async fn consume_message(brokers: &str, group_id: &str, topics: Vec<&str>, d
             }
         };
     }
+    
 }

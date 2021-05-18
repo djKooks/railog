@@ -9,6 +9,12 @@ struct TrailiLog {
     value: String,
 }
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct MeiliSearchConfig {
+    host: String,
+    master_key: String
+}
+
 impl Document for TrailiLog {
     type UIDType = String;
     fn get_uid(&self) -> &Self::UIDType {
@@ -16,9 +22,9 @@ impl Document for TrailiLog {
     }
 }
 
-pub async fn publish_payload(payload: &str, document: &str) {
+pub async fn publish_payload(payload: &str, document: &str, config: MeiliSearchConfig) {
     // TODO: Set host/key as configuration
-    let client = Client::new("http://localhost:7700", "masterKey");
+    let client = Client::new(&config.host, &config.master_key);
     let doc = client.get_or_create(document).await.unwrap();
 
     // TODO: Update log form

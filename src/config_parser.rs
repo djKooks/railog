@@ -1,20 +1,16 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct YmlConfig {
-    meilisearch: MeiliSearchConfig,
-    consumers: TrailiConfig
-}
+use crate::publish_message::MeiliSearchConfig;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct MeiliSearchConfig {
-    host: String,
-    master_key: String
+pub struct YmlConfig {
+    pub meilisearch: MeiliSearchConfig,
+    pub consumers: KafkaConsumerConfig
 }
 
 /// TODO: Make config for multiple input types...
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct TrailiConfig {
+pub struct KafkaConsumerConfig {
     input_type: InputType,
     pub brokers: String,
     pub topics: Vec<String>,
@@ -46,7 +42,7 @@ pub fn parse_config(config_path: &str) -> Option<YmlConfig, > {
 
 #[test]
 fn parse_test() {
-    let config: TrailiConfig = parse_config("resources/sample_config.yml").unwrap();
+    let config: KafkaConsumerConfig = parse_config("resources/sample_config.yml").unwrap();
 
     assert_eq!(config.brokers, "localhost:9092");
     assert_eq!(config.group_id, "test-group");
