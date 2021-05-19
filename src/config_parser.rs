@@ -16,6 +16,7 @@ pub struct KafkaConsumerConfig {
     pub brokers: String,
     pub topics: Vec<String>,
     pub group_id: String,
+    pub log_level: String,
     pub options: HashMap<String, String>
 }
 
@@ -30,8 +31,6 @@ pub fn parse_config(config_path: &str) -> Option<YmlConfig, > {
     let config: std::fs::File = std::fs::File::open(config_path).expect("Cannot find config file");
     let parsed: YmlConfig =
         serde_yaml::from_reader(config).expect("Cannot parse configuration");
-
-    println!("parsed -> {:?}", parsed);
 
     let input_source = &parsed.consumers;
     

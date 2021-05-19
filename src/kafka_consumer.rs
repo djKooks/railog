@@ -26,24 +26,36 @@ impl ConsumerContext for CustomContext {
     }
 }
 
-type LoggingConsumer = StreamConsumer<CustomContext>;
+pub type LoggingConsumer = StreamConsumer<CustomContext>;
 
-pub async fn get_consumer(consumer_config: KafkaConsumerConfig) -> StreamConsumer<CustomContext>  {
+pub async fn get_consumer(consumer_config: KafkaConsumerConfig) -> LoggingConsumer {
     let topics: Vec<&str> = consumer_config.topics.iter().map(String::as_str).collect();
     let context = CustomContext;
     let topic = &topics[..];
     let options = consumer_config.options;
 
     // Get kafka-client configuration by configs
-    let consumer: LoggingConsumer = ClientConfig::new()
-        .set("group.id", consumer_config.group_id)
-        .set("bootstrap.servers", consumer_config.brokers)
-        .set("enable.partition.eof", "false")
-        .set("session.timeout.ms", "6000")
-        .set("enable.auto.commit", "true")
-        .set("allow.auto.create.topics", "true")
-        .set("auto.offset.reset", "smallest")
-        .set_log_level(RDKafkaLogLevel::Debug)
+    let mut pre_config = ClientConfig::new();
+    pre_config.set("group.id", consumer_config.group_id).set("bootstrap.servers", consumer_config.brokers); 
+
+    for (k, v) in options {
+        pre_config.set(k, v);
+    }
+
+    let log_lvl: RDKafkaLogLevel = match consumer_config.log_level.as_str() {
+        "debug" => RDKafkaLogLevel::Debug,
+        "info" => RDKafkaLogLevel::Info,
+        "notice" => RDKafkaLogLevel::Notice,
+        "warn" => RDKafkaLogLevel::Warning,
+        "error" => RDKafkaLogLevel::Error,
+        "critical" => RDKafkaLogLevel::Critical,
+        "alert" => RDKafkaLogLevel::Alert,
+        "emerg" => RDKafkaLogLevel::Emerg,
+        _ => RDKafkaLogLevel::Error,
+    };
+
+    let consumer: LoggingConsumer = 
+        pre_config.set_log_level(log_lvl)
         .create_with_context(context)
         .expect("Consumer creation failed");
 

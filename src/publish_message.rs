@@ -3,10 +3,11 @@ use meilisearch_sdk::{client::*, document::*};
 
 use uuid::Uuid;
 
+/// TODO: Think of format to be published in...
 #[derive(Serialize, Deserialize, Debug)]
 struct TrailiLog {
     id: String,
-    value: String,
+    payload: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -31,7 +32,7 @@ pub async fn publish_payload(payload: &str, config: &MeiliSearchConfig) {
     // TODO: Update log form
     let log = TrailiLog {
         id: Uuid::new_v4().to_string(),
-        value: String::from(payload),
+        payload: String::from(payload),
     };
 
     let pl: Vec<TrailiLog> = vec![log];
