@@ -12,7 +12,8 @@ struct TrailiLog {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct MeiliSearchConfig {
     host: String,
-    master_key: String
+    master_key: String,
+    pub document: String
 }
 
 impl Document for TrailiLog {
@@ -22,10 +23,10 @@ impl Document for TrailiLog {
     }
 }
 
-pub async fn publish_payload(payload: &str, document: &str, config: MeiliSearchConfig) {
+pub async fn publish_payload(payload: &str, config: &MeiliSearchConfig) {
     // TODO: Set host/key as configuration
     let client = Client::new(&config.host, &config.master_key);
-    let doc = client.get_or_create(document).await.unwrap();
+    let doc = client.get_or_create(&config.document).await.unwrap();
 
     // TODO: Update log form
     let log = TrailiLog {

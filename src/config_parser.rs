@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 use crate::publish_message::MeiliSearchConfig;
@@ -15,7 +16,7 @@ pub struct KafkaConsumerConfig {
     pub brokers: String,
     pub topics: Vec<String>,
     pub group_id: String,
-    pub document: String,
+    pub options: HashMap<String, String>
 }
 
 /// TODO: Support variable types...
@@ -33,7 +34,8 @@ pub fn parse_config(config_path: &str) -> Option<YmlConfig, > {
     println!("parsed -> {:?}", parsed);
 
     let input_source = &parsed.consumers;
-    // Only kafka type is supported yet...
+    
+    // TODO: Only kafka type is supported yet...
     match input_source.input_type {
         InputType::Kafka => Some(parsed.clone()),
         _ => None

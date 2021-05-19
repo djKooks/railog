@@ -13,7 +13,7 @@ use rdkafka::topic_partition_list::TopicPartitionList;
 
 
 use config_parser::{parse_config, YmlConfig};
-use kafka_consumer::{consume_message, get_consumer, CustomContext};
+use kafka_consumer::{get_consumer, CustomContext};
 use publish_message::publish_payload;
 
 #[tokio::main]
@@ -38,6 +38,7 @@ async fn main() {
     };
     
     println!("{:?}", config);
+    
     let consumer_config = config.consumers;
     let ms_config = config.meilisearch;
     let consumer: StreamConsumer<CustomContext> = get_consumer(consumer_config).await;
@@ -58,7 +59,7 @@ async fn main() {
                 println!("key: '{:?}', payload: '{}', topic: {}, partition: {}, offset: {}, timestamp: {:?}",
                       m.key(), payload, m.topic(), m.partition(), m.offset(), m.timestamp());
 
-                // publish_payload(payload, ms_config).await;
+                publish_payload(payload, &ms_config).await;
                 consumer.commit_message(&m, CommitMode::Async).unwrap();
             }
         };
@@ -66,6 +67,4 @@ async fn main() {
 
     // TODO: consuming logic should be selected by data source type
     // let test = consume_message(&consumer_config.brokers, &consumer_config.group_id, topics, &consumer_config.document).await;
-
-    
 }
