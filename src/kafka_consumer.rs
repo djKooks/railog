@@ -1,28 +1,13 @@
-use meilisearch_sdk::{client::*, document::*};
 use rdkafka::client::ClientContext;
 use rdkafka::config::{ClientConfig, RDKafkaLogLevel};
 use rdkafka::consumer::stream_consumer::StreamConsumer;
-use rdkafka::consumer::{CommitMode, Consumer, ConsumerContext, Rebalance};
+use rdkafka::consumer::{Consumer, ConsumerContext, Rebalance};
 use rdkafka::error::KafkaResult;
-use rdkafka::message::Message;
 use rdkafka::topic_partition_list::TopicPartitionList;
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
-struct CustomContext;
+use crate::config_parser::KafkaConsumerConfig;
 
-#[derive(Serialize, Deserialize, Debug)]
-struct TrailiLog {
-    id: String,
-    value: String,
-}
-
-impl Document for TrailiLog {
-    type UIDType = String;
-    fn get_uid(&self) -> &Self::UIDType {
-        &self.id
-    }
-}
+pub struct CustomContext;
 
 impl ClientContext for CustomContext {}
 
@@ -40,22 +25,38 @@ impl ConsumerContext for CustomContext {
     }
 }
 
-type LoggingConsumer = StreamConsumer<CustomContext>;
+pub type LoggingConsumer = StreamConsumer<CustomContext>;
 
-pub async fn consume_message(brokers: &str, group_id: &str, topics: Vec<&str>, document: &str) {
+pub async fn get_consumer(consumer_config: KafkaConsumerConfig) -> LoggingConsumer {
+    let topics: Vec<&str> = consumer_config.topics.iter().map(String::as_str).collect();
     let context = CustomContext;
     let topic = &topics[..];
+    let options = consumer_config.options;
 
     // Get kafka-client configuration by configs
-    let consumer: LoggingConsumer = ClientConfig::new()
-        .set("group.id", group_id)
-        .set("bootstrap.servers", brokers)
-        .set("enable.partition.eof", "false")
-        .set("session.timeout.ms", "6000")
-        .set("enable.auto.commit", "true")
-        .set("allow.auto.create.topics", "true")
-        .set("auto.offset.reset", "smallest")
-        .set_log_level(RDKafkaLogLevel::Debug)
+    let mut pre_config = ClientConfig::new();
+    pre_config
+        .set("group.id", consumer_config.group_id)
+        .set("bootstrap.servers", consumer_config.brokers);
+
+    for (k, v) in options {
+        pre_config.set(k, v);
+    }
+
+    let log_lvl: RDKafkaLogLevel = match consumer_config.log_level.as_str() {
+        "debug" => RDKafkaLogLevel::Debug,
+        "info" => RDKafkaLogLevel::Info,
+        "notice" => RDKafkaLogLevel::Notice,
+        "warn" => RDKafkaLogLevel::Warning,
+        "error" => RDKafkaLogLevel::Error,
+        "critical" => RDKafkaLogLevel::Critical,
+        "alert" => RDKafkaLogLevel::Alert,
+        "emerg" => RDKafkaLogLevel::Emerg,
+        _ => RDKafkaLogLevel::Error,
+    };
+
+    let consumer: LoggingConsumer = pre_config
+        .set_log_level(log_lvl)
         .create_with_context(context)
         .expect("Consumer creation failed");
 
@@ -63,40 +64,5 @@ pub async fn consume_message(brokers: &str, group_id: &str, topics: Vec<&str>, d
         .subscribe(topic)
         .expect("Can't subscribe to specified topics");
 
-    loop {
-        match consumer.recv().await {
-            Err(e) => println!("Kafka error: {}", e),
-            Ok(m) => {
-                println!("run loop");
-                let payload = match m.payload_view::<str>() {
-                    None => "",
-                    Some(Ok(s)) => s,
-                    Some(Err(e)) => {
-                        println!("Error while deserializing message payload: {:?}", e);
-                        ""
-                    }
-                };
-                println!("key: '{:?}', payload: '{}', topic: {}, partition: {}, offset: {}, timestamp: {:?}",
-                      m.key(), payload, m.topic(), m.partition(), m.offset(), m.timestamp());
-
-                add_payload(payload, document).await;
-                consumer.commit_message(&m, CommitMode::Async).unwrap();
-            }
-        };
-    }
-}
-
-async fn add_payload(payload: &str, document: &str) {
-    // TODO: Set host/key as configuration
-    let client = Client::new("http://localhost:7700", "masterKey");
-    let doc = client.get_or_create(document).await.unwrap();
-
-    // TODO: Update log form
-    let log = TrailiLog {
-        id: Uuid::new_v4().to_string(),
-        value: String::from(payload),
-    };
-
-    let pl: Vec<TrailiLog> = vec![log];
-    doc.add_documents(&pl, None).await.unwrap();
+    consumer
 }
