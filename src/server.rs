@@ -3,17 +3,11 @@ mod kafka_consumer;
 mod publish_message;
 
 use clap::{App, Arg};
-use rdkafka::client::ClientContext;
-use rdkafka::config::{ClientConfig, RDKafkaLogLevel};
-use rdkafka::consumer::stream_consumer::StreamConsumer;
-use rdkafka::consumer::{CommitMode, Consumer, ConsumerContext, Rebalance};
-use rdkafka::error::KafkaResult;
+use rdkafka::consumer::{CommitMode, Consumer};
 use rdkafka::message::Message;
-use rdkafka::topic_partition_list::TopicPartitionList;
-
 
 use config_parser::{parse_config, YmlConfig};
-use kafka_consumer::{get_consumer, CustomContext, LoggingConsumer};
+use kafka_consumer::{get_consumer, LoggingConsumer};
 use publish_message::publish_payload;
 
 #[tokio::main]
@@ -34,11 +28,11 @@ async fn main() {
     let config_file_path: &str = matches.value_of("config").unwrap();
     let config: YmlConfig = match parse_config(config_file_path) {
         Some(v) => v,
-        None => panic!("Unsupported type")
+        None => panic!("Unsupported type"),
     };
-    
+
     println!("{:?}", config);
-    
+
     let consumer_config = config.consumers;
     let ms_config = config.meilisearch;
     let consumer: LoggingConsumer = get_consumer(consumer_config).await;

@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use meilisearch_sdk::{client::*, document::*};
+use serde::{Deserialize, Serialize};
 
 use uuid::Uuid;
 
@@ -12,9 +12,9 @@ struct TrailiLog {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct MeiliSearchConfig {
-    host: String,
-    master_key: String,
-    pub document: String
+    pub host: String,
+    pub master_key: String,
+    pub document: String,
 }
 
 impl Document for TrailiLog {
@@ -38,4 +38,3 @@ pub async fn publish_payload(payload: &str, config: &MeiliSearchConfig) {
     let pl: Vec<TrailiLog> = vec![log];
     doc.add_documents(&pl, None).await.unwrap();
 }
-
